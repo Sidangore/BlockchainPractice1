@@ -18,11 +18,15 @@ class BlockchainController {
         this.app.get("/block/height/:height", async(req, res) => {
             if (req.params.height) {
                 const height = parseInt(req.params.height);
-                const block = await this.blockchain.getBlockByHeight(height);
-                if (block) {
-                    return res.status(200).json(block);
-                } else {
-                    return res.status(404).send("Block not found!");
+                try {
+                    const block = await this.blockchain.getBlockByHeight(height);
+                    if (block == null) {
+                        return res.status(404).send("Block not found!");
+                    } else {
+                        return res.status(200).json(block);
+                    }
+                } catch (error) {
+                    return res.status(500).send("Error in finding the block")
                 }
             } else {
                 return res.status(404).send("Block not found -> Check the parameters");
@@ -56,7 +60,7 @@ class BlockchainController {
                 // console.log(address, message, signature, star);
                 try {
                     let block = await this.blockchain.submitStar(address, message, signature, star);
-                    console.log(block);
+
                     if (block) {
                         return res.status(200).json(block);
                     } else {
