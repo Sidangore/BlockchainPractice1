@@ -33,7 +33,7 @@ class Blockchain {
             block.hash = SHA256(JSON.stringify(block)).toString();
             self.chain.push(block);
             self.height++;
-            self.validateChain();
+            await self.validateChain();
             resolve(block);
             reject("Block cannot be added in Blockchain.");
         });
@@ -126,35 +126,68 @@ class Blockchain {
 
     // Validate Chain
     validateChain() {
-        let self = this;
-        let errorLog = [];
+        // let self = this;
+        // let errorLog = [];
+        // return new Promise(async(resolve, reject) => {
+        //     const promises = [];
+        //     let chainIndex = 0;
+        //     self.chain.forEach(async(block) => {
+        //         promises.push(await block.validateBlock());
+        //         console.log('promise:', promises);
+        //         if (block.height > 0) {
+        //             const previousBlockHash = block.previousBlockHash;
+        //             const hash = self.chain[chainIndex - 1].hash;
+        //             if (hash != previousBlockHash) {
+        //                 errorLog.push(`Error : Block Height: ${block.height} - Previous hash doesnt match`);
+        //             }
+        //         }
+        //         // console.log(errorLog);
+        //         chainIndex++;
+        //     });
+        //     Promise.all(promises).then((result) => {
+        //         let chainIndex = 0;
+        //         result.forEach(valid => {
+        //             if (!valid) {
+        //                 errorLog.push(`Error : Block Height - ${self.chain[chainIndex].height} - has been tampered.`);
+        //             }
+        //             chainIndex++;
+        //         });
+        //         console.log('rror logsss: ',
+        //             errorLog);
+        //         resolve(errorLog);
+        //     }).catch(err => {
+        //         console.log(err);
+        //         reject(err);
+        //     });
+        // });
+        let self = this
         return new Promise(async(resolve, reject) => {
+            const errorLogs = [];
             const promises = [];
-            let chainIndex = 0;
-            self.chain.forEach((block) => {
-                promises.push(block.validateBlock());
-                if (block.height > 0) {
-                    const previousBlockHash = block.previousBlockHash;
-                    const hash = self.chain[chainIndex - 1].hash;
-                    if (hash != previousBlockHash) {
-                        errorLog.push(`Error : Block Height: ${block.height} - Previous hash doesnt match`);
-                    }
+            if (self.height == 0) {
+                const isValidated = await self.chain[0].validateBlock();
+                promises.push(isValidated);
+            } else if (self.height == -1) {
+                promises.push(false);
+            } else {
+                for (let i = 0; i <= self.height; i++) {
+                    const isValidated = await self.chain[i].validateBlock();
+                    promises.push(isValidated);
                 }
-                chainIndex++;
-            });
-            Promise.all(promises).then((result) => {
-                chainIndex = 0;
-                result.forEach(valid => {
-                    if (!valid) {
-                        errorLog.push(`Error : Block Height - ${self.chain[chainIndex].height} - has been tampered.`);
-                    }
-                    chainIndex++;
+            }
+            Promise.all(promises)
+                .then((result) => {
+                    var chainIndex = 0;
+                    result.forEach(valid => {
+                        if (!valid) {
+                            errorLog.push(`Error : Block Height - ${self.chain[chainIndex].height} - has been tampered.`);
+                        }
+                        chainIndex++;
+                    });
+                    resolve(errorLogs);
+                }).catch(() => {
+                    reject('Error found!');
                 });
-                resolve(errorLog);
-            }).catch(err => {
-                console.log(err);
-                reject(err);
-            })
         });
     }
 }

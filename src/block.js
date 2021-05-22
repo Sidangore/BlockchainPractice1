@@ -17,11 +17,8 @@ class Block {
     validateBlock() {
         let self = this;
         return new Promise(async(resolve, reject) => {
-            const hash = self.hash;
-            self.hash = null;
-            const calculatedHash = await SHA256(JSON.stringify(self)).toString();
-            self.hash = hash;
-            if (calculatedHash !== hash) {
+            const calculatedHash = SHA256(JSON.stringify({...self, hash: null })).toString();
+            if (calculatedHash != this.hash) {
                 //hash has been tampered
                 resolve(false);
             } else {

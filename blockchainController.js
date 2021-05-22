@@ -12,6 +12,7 @@ class BlockchainController {
         this.submitStar();
         this.getBlockByHash();
         this.getStarsByOwner();
+        this.getValidateChain();
     }
 
     getBlockByHeight() {
@@ -107,6 +108,21 @@ class BlockchainController {
                 }
             } else {
                 return res.status(500).send("stars not found! please check the parameters");
+            }
+        });
+    }
+
+    getValidateChain() {
+        this.app.get("/validateChain", async(req, res) => {
+            try {
+                const errorLogs = await this.blockchain.validateChain();
+                if (errorLogs.length == 0) {
+                    return res.status(200).send("All good");
+                } else {
+                    return res.status(404).send("some error");
+                }
+            } catch (error) {
+                return res.status(500).send('Error encountered');
             }
         });
     }
